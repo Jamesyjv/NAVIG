@@ -1,0 +1,10 @@
+fastapi
+uvicorn[standard]
+sqlalchemy
+argon2-cffi
+python-jose[cryptography]
+python-multipart
+anthropic
+pydantic[email]
+python-dotenv
+httpx

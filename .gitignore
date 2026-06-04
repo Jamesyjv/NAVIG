@@ -1,0 +1,63 @@
+# NAVIG — Root .gitignore
+
+# ── Secrets ─────────────────────────────────────────────────────────────────
+.env
+**/.env
+!**/.env.example
+*.pem
+*.key
+*.p12
+*.cer
+
+# ── Node / npm ───────────────────────────────────────────────────────────────
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# ── Expo / React Native ──────────────────────────────────────────────────────
+.expo/
+dist/
+web-build/
+*.jsbundle
+ios/Pods/
+android/.gradle/
+android/build/
+android/app/build/
+
+# ── Python / Backend ─────────────────────────────────────────────────────────
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.Python
+env/
+venv/
+.venv/
+*.egg-info/
+dist/
+build/
+*.sqlite3
+navig.db
+test.db
+
+# ── IDEs ──────────────────────────────────────────────────────────────────────
+.vscode/
+.idea/
+*.swp
+*.swo
+.DS_Store
+Thumbs.db
+
+# ── Test artefacts ────────────────────────────────────────────────────────────
+.coverage
+htmlcov/
+.pytest_cache/
+*.test.db
+navig.db
+test_navig.db
+*.pyc
+__pycache__/
+backend/.env
+.env
+src_temp/
