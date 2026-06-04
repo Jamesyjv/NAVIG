@@ -1,8 +1,8 @@
 import axios from 'axios'
 import { useUserStore } from '../store/userStore'
 
-// Change this to your machine's local IP when testing on a physical device
-const BASE_URL = 'http://localhost:8000'
+// Change this to your machine's local IP or production API URL
+const BASE_URL = process.env.EXPO_PUBLIC_API_URL || 'http://localhost:8000'
 
 export const api = axios.create({
   baseURL: BASE_URL,
