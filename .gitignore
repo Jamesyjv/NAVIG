@@ -61,3 +61,10 @@ __pycache__/
 backend/.env
 .env
 src_temp/
+navig.db
+test_navig.db
+*.pyc
+__pycache__/
+backend/.env
+.env
+src_temp/
