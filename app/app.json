@@ -41,7 +41,8 @@
     "extra": {
       "eas": {
         "projectId": "placeholder-eas-project-id"
-      }
+      },
+      "apiUrl": "https://navig-api.onrender.com"
     }
   }
 }

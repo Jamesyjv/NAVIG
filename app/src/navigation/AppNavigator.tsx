@@ -8,6 +8,7 @@ import WelcomeScreen from '../screens/Onboarding/WelcomeScreen'
 import GoalCreationScreen from '../screens/Onboarding/GoalCreationScreen'
 import AssessmentScreen from '../screens/Onboarding/AssessmentScreen'
 import HomeScreen from '../screens/Home/HomeScreen'
+import RoadmapScreen from '../screens/Roadmap/RoadmapScreen'
 import ProgressScreen from '../screens/Progress/ProgressScreen'
 import DecisionScreen from '../screens/Decision/DecisionScreen'
 
@@ -47,6 +48,7 @@ function MainTabs() {
         tabBarIcon: ({ color, size }) => {
           const icons: Record<string, keyof typeof Feather.glyphMap> = {
             Home: 'home',
+            Roadmap: 'map',
             Progress: 'bar-chart-2',
             Decision: 'message-circle',
           }
@@ -55,6 +57,7 @@ function MainTabs() {
       })}
     >
       <Tab.Screen name="Home" component={HomeScreen} />
+      <Tab.Screen name="Roadmap" component={RoadmapScreen} />
       <Tab.Screen name="Progress" component={ProgressScreen} />
       <Tab.Screen name="Decision" component={DecisionScreen} />
     </Tab.Navigator>

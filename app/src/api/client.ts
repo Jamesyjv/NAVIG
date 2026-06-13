@@ -1,8 +1,10 @@
 import axios from 'axios'
 import { useUserStore } from '../store/userStore'
 
-// Change this to your machine's local IP or production API URL
-const BASE_URL = process.env.EXPO_PUBLIC_API_URL || 'http://localhost:8000'
+// Reads from .env (EXPO_PUBLIC_API_URL=http://localhost:8000 for local dev)
+// Falls back to the deployed Render backend
+const BASE_URL =
+  process.env.EXPO_PUBLIC_API_URL || 'https://navig-api.onrender.com'
 
 export const api = axios.create({
   baseURL: BASE_URL,
