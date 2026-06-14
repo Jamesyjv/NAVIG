@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react'
-import { View, ActivityIndicator, StyleSheet } from 'react-native'
+import { View, ActivityIndicator, StyleSheet, Platform } from 'react-native'
 import { SafeAreaProvider } from 'react-native-safe-area-context'
 import {
   useFonts,
@@ -13,8 +13,10 @@ import AppNavigator from './src/navigation/AppNavigator'
 import { useUserStore } from './src/store/userStore'
 import { colors } from './src/theme/colors'
 
-// Prevent the splash screen from auto-hiding before we're ready
-SplashScreen.preventAutoHideAsync().catch(() => {})
+// Only prevent splash auto-hide on native — on web it blocks the entire render
+if (Platform.OS !== 'web') {
+  SplashScreen.preventAutoHideAsync().catch(() => {})
+}
 
 export default function App() {
   const { hydrateToken } = useUserStore()
@@ -27,16 +29,21 @@ export default function App() {
     DMSans_700Bold,
   })
 
-  // Hydrate stored token from SecureStore on first launch
+  // Hydrate stored token on first launch.
+  // Safety timeout ensures the app renders even if something unexpected hangs.
   useEffect(() => {
+    const timer = setTimeout(() => setAppReady(true), 3000)
     hydrateToken()
       .catch(() => {})
-      .finally(() => setAppReady(true))
+      .finally(() => {
+        clearTimeout(timer)
+        setAppReady(true)
+      })
   }, [])
 
-  // Hide splash when both fonts and async init are done
+  // Hide splash when both fonts and async init are done (native only)
   useEffect(() => {
-    if ((fontsLoaded || fontError) && appReady) {
+    if ((fontsLoaded || fontError) && appReady && Platform.OS !== 'web') {
       SplashScreen.hideAsync().catch(() => {})
     }
   }, [fontsLoaded, fontError, appReady])

@@ -68,3 +68,4 @@ __pycache__/
 backend/.env
 .env
 src_temp/
+.vercel
