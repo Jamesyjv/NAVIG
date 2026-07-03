@@ -6,28 +6,23 @@ import { useAuth } from '../store/auth'
 type Level = 'beginner' | 'intermediate' | 'expert'
 
 const LEVELS: { value: Level; label: string; desc: string }[] = [
-  { value: 'beginner', label: '🌱 Beginner', desc: 'Just starting out' },
-  { value: 'intermediate', label: '⚡ Intermediate', desc: 'Some experience' },
-  { value: 'expert', label: '🔥 Expert', desc: 'Deep background' },
+  { value: 'beginner',     label: 'Beginner',     desc: "I'm just getting started" },
+  { value: 'intermediate', label: 'Intermediate',  desc: 'I have some experience' },
+  { value: 'expert',       label: 'Expert',        desc: 'I have deep expertise' },
 ]
-const HOURS = [2, 5, 10, 20, 40]
-const WEEKS = [4, 8, 12, 24, 52]
-
-interface StepProps { onNext: () => void; onBack: () => void }
+const HOURS_OPTIONS = [2, 5, 10, 20, 40]
+const WEEK_OPTIONS  = [4, 8, 12, 24, 52]
 
 export default function Assessment() {
-  const [step, setStep] = useState(0)
-  const [level, setLevel] = useState<Level>('beginner')
-  const [hours, setHours] = useState(10)
-  const [budget, setBudget] = useState('')
-  const [weeks, setWeeks] = useState(12)
+  const [step, setStep]       = useState(0)
+  const [level, setLevel]     = useState<Level>('beginner')
+  const [hours, setHours]     = useState(10)
+  const [budget, setBudget]   = useState('')
+  const [weeks, setWeeks]     = useState(12)
   const [loading, setLoading] = useState(false)
-  const [error, setError] = useState('')
-  const { updateActiveGoal } = useAuth()
+  const [error, setError]     = useState('')
+  const { updateActiveGoal }  = useAuth()
   const navigate = useNavigate()
-
-  const next = () => setStep(s => s + 1)
-  const back = () => setStep(s => s - 1)
 
   const finish = async () => {
     setLoading(true); setError('')
@@ -44,134 +39,150 @@ export default function Assessment() {
       navigate('/home', { replace: true })
     } catch (err: unknown) {
       const e = err as { response?: { data?: { detail?: string } } }
-      setError(e.response?.data?.detail ?? 'Failed to generate roadmap. Try again.')
+      setError(e?.response?.data?.detail ?? 'Failed to generate roadmap.')
       setLoading(false)
     }
   }
 
-  const STEPS = [
-    // Step 0: Experience
-    <div className="col gap16 page-enter" key="level">
-      <div className="col gap4">
-        <p className="text-xs text-accent upper">Step 2 of 3 · Assessment</p>
-        <h2 className="text-title">What's your experience level?</h2>
-      </div>
-      <div className="col gap10" style={{ gap: 10 }}>
-        {LEVELS.map(l => (
-          <button
-            key={l.value}
-            type="button"
-            onClick={() => setLevel(l.value)}
-            className="card card-sm row between"
-            style={{
-              cursor: 'pointer', border: `1px solid ${level === l.value ? 'var(--accent)' : 'var(--border)'}`,
-              background: level === l.value ? 'var(--accent-dim)' : 'var(--card)',
-              textAlign: 'left', width: '100%',
-            }}
-          >
-            <div>
-              <p style={{ fontWeight: 600, fontSize: 15, color: 'var(--text)' }}>{l.label}</p>
-              <p className="text-sm text-muted" style={{ marginTop: 2 }}>{l.desc}</p>
-            </div>
-            {level === l.value && (
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                <polyline points="20 6 9 17 4 12"/>
-              </svg>
-            )}
-          </button>
-        ))}
-      </div>
-      <StepButtons onBack={() => navigate('/goal')} onNext={next} />
-    </div>,
-
-    // Step 1: Hours
-    <div className="col gap16 page-enter" key="hours">
-      <div className="col gap4">
-        <p className="text-xs text-accent upper">Step 2 of 3 · Assessment</p>
-        <h2 className="text-title">Hours per week?</h2>
-        <p className="text-sm text-muted">How much time can you commit?</p>
-      </div>
-      <div className="row wrap gap8">
-        {HOURS.map(h => (
-          <button
-            key={h}
-            type="button"
-            className={`chip${hours === h ? ' selected' : ''}`}
-            style={{ fontSize: 14, padding: '10px 20px' }}
-            onClick={() => setHours(h)}
-          >
-            {h}h
-          </button>
-        ))}
-      </div>
-      <StepButtons onBack={back} onNext={next} />
-    </div>,
-
-    // Step 2: Budget + Timeline
-    <div className="col gap16 page-enter" key="budget">
-      <div className="col gap4">
-        <p className="text-xs text-accent upper">Step 3 of 3 · Assessment</p>
-        <h2 className="text-title">Timeline & budget</h2>
-      </div>
-
-      <div className="col gap8">
-        <label className="text-sm text-muted">Goal deadline (weeks)</label>
-        <div className="row wrap gap8">
-          {WEEKS.map(w => (
-            <button
-              key={w}
-              type="button"
-              className={`chip${weeks === w ? ' selected' : ''}`}
-              style={{ fontSize: 14, padding: '10px 16px' }}
-              onClick={() => setWeeks(w)}
-            >
-              {w}w
-            </button>
-          ))}
-        </div>
-      </div>
-
-      <div className="col gap8">
-        <label className="text-sm text-muted">Budget in USD (optional)</label>
-        <input
-          className="input"
-          type="number"
-          placeholder="e.g. 500"
-          min="0"
-          value={budget}
-          onChange={e => setBudget(e.target.value)}
-        />
-      </div>
-
-      {error && <p style={{ color: 'var(--error)', fontSize: 13 }}>{error}</p>}
-
-      <button className="btn btn-primary" onClick={finish} disabled={loading} style={{ marginTop: 8 }}>
-        {loading
-          ? <><span className="spinner" /> Generating roadmap…</>
-          : '🚀 Generate My Roadmap'}
-      </button>
-      <button className="btn btn-outline" onClick={back}>← Back</button>
-    </div>,
+  const stepDots = [
+    { id: 'done' as const },   // goal (already done)
+    { id: step >= 1 ? 'done' as const : 'active' as const },
+    { id: step >= 2 ? 'done' as const : step === 1 ? 'active' as const : '' as const },
   ]
 
   return (
-    <div className="onboarding">
+    <div className="onboarding animate-in">
       {/* Step dots */}
-      <div className="step-dots">
-        {STEPS.map((_, i) => (
-          <div key={i} className={`step-dot${i === step ? ' active' : ''}`} />
+      <div className="row gap6">
+        {stepDots.map((d, i) => (
+          <div key={i} className={`step-dot ${d.id}`} />
         ))}
       </div>
-      {STEPS[step]}
-    </div>
-  )
-}
 
-function StepButtons({ onBack, onNext }: StepProps) {
-  return (
-    <div className="col gap8" style={{ marginTop: 'auto' }}>
-      <button className="btn btn-primary" onClick={onNext}>Continue →</button>
-      <button className="btn btn-outline" onClick={onBack}>← Back</button>
+      {step === 0 && (
+        <div className="col gap20 animate-in">
+          <div className="col gap8">
+            <p className="t-overline">Step 2 — Experience</p>
+            <h2 className="t-title">How familiar are you<br />with this area?</h2>
+          </div>
+
+          <div className="col gap8">
+            {LEVELS.map(l => (
+              <button
+                key={l.value}
+                type="button"
+                onClick={() => setLevel(l.value)}
+                style={{
+                  display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                  padding: '16px 18px',
+                  background: level === l.value ? 'var(--accent-faint)' : 'var(--surface)',
+                  border: `1px solid ${level === l.value ? 'rgba(0,212,255,0.3)' : 'var(--line)'}`,
+                  borderRadius: 'var(--r2)',
+                  cursor: 'pointer',
+                  transition: 'all 0.14s',
+                  textAlign: 'left',
+                  width: '100%',
+                  boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.04)',
+                }}
+              >
+                <div>
+                  <p style={{ fontWeight: 600, fontSize: 15, color: level === l.value ? 'var(--accent)' : 'var(--t1)' }}>
+                    {l.label}
+                  </p>
+                  <p className="t-sm t-muted" style={{ marginTop: 2 }}>{l.desc}</p>
+                </div>
+                {level === l.value && (
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                    <polyline points="20 6 9 17 4 12"/>
+                  </svg>
+                )}
+              </button>
+            ))}
+          </div>
+
+          <div style={{ flex: 1 }} />
+          <button className="btn btn-primary" onClick={() => setStep(1)}>Continue</button>
+          <button className="btn btn-ghost" onClick={() => navigate('/goal')}>Back</button>
+        </div>
+      )}
+
+      {step === 1 && (
+        <div className="col gap20 animate-in">
+          <div className="col gap8">
+            <p className="t-overline">Step 2 — Commitment</p>
+            <h2 className="t-title">How many hours can<br />you commit each week?</h2>
+          </div>
+
+          <div className="row wrap gap8">
+            {HOURS_OPTIONS.map(h => (
+              <button
+                key={h}
+                type="button"
+                className={`chip${hours === h ? ' selected' : ''}`}
+                style={{ fontSize: 14, padding: '10px 18px' }}
+                onClick={() => setHours(h)}
+              >
+                {h} hrs
+              </button>
+            ))}
+          </div>
+
+          <div style={{ flex: 1 }} />
+          <button className="btn btn-primary" onClick={() => setStep(2)}>Continue</button>
+          <button className="btn btn-ghost" onClick={() => setStep(0)}>Back</button>
+        </div>
+      )}
+
+      {step === 2 && (
+        <div className="col gap20 animate-in">
+          <div className="col gap8">
+            <p className="t-overline">Step 3 — Timeline</p>
+            <h2 className="t-title">When do you want<br />to reach your goal?</h2>
+          </div>
+
+          <div className="col gap10">
+            <p className="input-label">Target deadline</p>
+            <div className="row wrap gap8">
+              {WEEK_OPTIONS.map(w => (
+                <button
+                  key={w}
+                  type="button"
+                  className={`chip${weeks === w ? ' selected' : ''}`}
+                  style={{ fontSize: 14, padding: '10px 16px' }}
+                  onClick={() => setWeeks(w)}
+                >
+                  {w < 52 ? `${w} weeks` : '1 year'}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div className="field">
+            <p className="input-label">Budget (optional)</p>
+            <input
+              className="input"
+              type="number"
+              placeholder="USD — leave blank if none"
+              min="0"
+              value={budget}
+              onChange={e => setBudget(e.target.value)}
+            />
+          </div>
+
+          {error && (
+            <p style={{ fontSize: 13, color: 'var(--danger)', lineHeight: 1.4 }}>{error}</p>
+          )}
+
+          <div style={{ flex: 1 }} />
+
+          <button className="btn btn-primary" onClick={finish} disabled={loading}>
+            {loading
+              ? <><span className="spinner" />&nbsp;Generating roadmap…</>
+              : 'Generate my roadmap'}
+          </button>
+          <button className="btn btn-ghost" onClick={() => setStep(1)} disabled={loading}>Back</button>
+        </div>
+      )}
     </div>
   )
 }

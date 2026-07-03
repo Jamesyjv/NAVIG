@@ -8,12 +8,26 @@ interface Mission {
   estimated_minutes: number | null; priority: string; completed: boolean
 }
 
+const PRIORITY_COLOR: Record<string, string> = {
+  high:   'var(--danger)',
+  medium: 'var(--warn)',
+  low:    'var(--t3)',
+}
+
+function getGreeting() {
+  const h = new Date().getHours()
+  if (h < 5)  return 'Still up?'
+  if (h < 12) return 'Good morning'
+  if (h < 17) return 'Good afternoon'
+  return 'Good evening'
+}
+
 export default function Home() {
   const { user, activeGoal, logout } = useAuth()
-  const [missions, setMissions] = useState<Mission[]>([])
-  const [loading, setLoading] = useState(true)
-  const [completing, setCompleting] = useState<string | null>(null)
-  const [showLogout, setShowLogout] = useState(false)
+  const [missions, setMissions]         = useState<Mission[]>([])
+  const [loading, setLoading]           = useState(true)
+  const [completing, setCompleting]     = useState<string | null>(null)
+  const [menuOpen, setMenuOpen]         = useState(false)
   const navigate = useNavigate()
 
   const fetchMissions = useCallback(async () => {
@@ -22,7 +36,7 @@ export default function Home() {
       const res = await missionsAPI.getToday()
       setMissions(Array.isArray(res.data) ? res.data : [])
     } catch { setMissions([]) }
-    finally { setLoading(false) }
+    finally  { setLoading(false) }
   }, [])
 
   useEffect(() => { fetchMissions() }, [fetchMissions])
@@ -35,97 +49,105 @@ export default function Home() {
     } finally { setCompleting(null) }
   }
 
-  const greeting = (() => {
-    const h = new Date().getHours()
-    if (h < 12) return 'Good morning'
-    if (h < 17) return 'Good afternoon'
-    return 'Good evening'
-  })()
-
-  const done = missions.filter(m => m.completed).length
+  const done  = missions.filter(m => m.completed).length
   const total = missions.length
 
   return (
-    <div className="page page-enter" style={{ display: 'flex', flexDirection: 'column' }}>
+    <div className="page animate-in" onClick={() => menuOpen && setMenuOpen(false)}>
       <div className="page-inner">
-        {/* Header */}
-        <div className="row between" style={{ paddingTop: 4 }}>
-          <div className="col gap4">
-            <p className="text-sm text-muted">{greeting},</p>
-            <p style={{ fontSize: 22, fontWeight: 700 }}>{user?.name ?? 'Navigator'} 👋</p>
+
+        {/* Header row */}
+        <div className="row between" style={{ paddingTop: 6, position: 'relative' }}>
+          <div className="col gap2">
+            <p style={{ fontSize: 12, color: 'var(--t3)', fontWeight: 500 }}>{getGreeting()}</p>
+            <p style={{ fontSize: 20, fontWeight: 700, letterSpacing: '-0.3px' }}>
+              {user?.name?.split(' ')[0] ?? 'Navigator'}
+            </p>
           </div>
+
           <div style={{ position: 'relative' }}>
-            <button className="avatar" onClick={() => setShowLogout(v => !v)}>
+            <button
+              className="avatar-btn"
+              onClick={e => { e.stopPropagation(); setMenuOpen(v => !v) }}
+              aria-label="Profile menu"
+            >
               {(user?.name?.[0] ?? 'N').toUpperCase()}
             </button>
-            {showLogout && (
-              <div style={{
-                position: 'absolute', right: 0, top: 48, background: 'var(--card)',
-                border: '1px solid var(--border)', borderRadius: 12, overflow: 'hidden',
-                zIndex: 100, minWidth: 140,
-              }}>
-                <button
-                  onClick={() => { setShowLogout(false); navigate('/goal') }}
-                  style={{ width: '100%', padding: '12px 16px', background: 'none', border: 'none', color: 'var(--text)', fontSize: 14, cursor: 'pointer', textAlign: 'left' }}
-                >
-                  🎯 Change Goal
+            {menuOpen && (
+              <div className="ctx-menu" onClick={e => e.stopPropagation()}>
+                <button onClick={() => { setMenuOpen(false); navigate('/goal') }}>
+                  Change goal
                 </button>
                 <div className="divider" />
-                <button
-                  onClick={() => { logout(); navigate('/') }}
-                  style={{ width: '100%', padding: '12px 16px', background: 'none', border: 'none', color: 'var(--error)', fontSize: 14, cursor: 'pointer', textAlign: 'left' }}
-                >
-                  Log Out
+                <button className="ctx-danger" onClick={() => { logout(); navigate('/') }}>
+                  Sign out
                 </button>
               </div>
             )}
           </div>
         </div>
 
-        {/* Active goal */}
+        {/* Active goal strip */}
         {activeGoal && (
-          <div className="card card-sm col gap4">
-            <p className="text-xs text-accent upper">Active Goal</p>
-            <p style={{ fontWeight: 600, fontSize: 15 }}>{activeGoal.title}</p>
+          <div className="goal-strip">
+            <div className="goal-strip-dot" />
+            <p style={{ fontSize: 13, fontWeight: 500, color: 'var(--t2)', flex: 1 }} className="text-truncate">
+              {activeGoal.title}
+            </p>
           </div>
         )}
 
-        {/* Progress bar */}
+        {/* Progress row */}
         {total > 0 && (
-          <div className="col gap6" style={{ gap: 8 }}>
+          <div className="col gap8" style={{ marginTop: 2 }}>
             <div className="row between">
-              <p className="text-sm text-muted">Today's progress</p>
-              <p className="text-sm text-accent">{done}/{total}</p>
+              <p style={{ fontSize: 12, color: 'var(--t3)', fontWeight: 500 }}>
+                Today's progress
+              </p>
+              <p style={{ fontSize: 12, color: done === total && total > 0 ? 'var(--success)' : 'var(--t3)', fontWeight: 600 }}>
+                {done} / {total}
+              </p>
             </div>
-            <div className="progress-track">
-              <div className="progress-fill" style={{ width: `${total ? (done / total) * 100 : 0}%` }} />
+            <div className="prog-track">
+              <div className="prog-fill" style={{ width: `${total ? (done / total) * 100 : 0}%` }} />
             </div>
           </div>
         )}
 
-        {/* Missions */}
-        <p style={{ fontWeight: 700, fontSize: 18, marginTop: 4 }}>Today's Missions</p>
+        {/* Section heading */}
+        <p className="section-head" style={{ marginTop: 8 }}>Missions</p>
 
+        {/* Content */}
         {loading ? (
           <div className="loading-center"><div className="spinner-lg" /></div>
         ) : missions.length === 0 ? (
           <div className="empty-state">
-            <span className="empty-emoji">🎯</span>
-            <p style={{ fontWeight: 700, fontSize: 18 }}>No missions yet</p>
-            <p className="text-sm text-muted">Your AI coach is preparing today's tasks. Pull down to refresh.</p>
-            <button className="btn btn-outline" style={{ width: 'auto', paddingInline: 24 }} onClick={fetchMissions}>
+            <div className="empty-icon">
+              <svg viewBox="0 0 24 24"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+            </div>
+            <p style={{ fontWeight: 600, fontSize: 16, color: 'var(--t1)' }}>All caught up</p>
+            <p className="t-sm t-muted" style={{ lineHeight: 1.5 }}>
+              No missions scheduled for today.<br />Pull to refresh or check back later.
+            </p>
+            <button
+              className="btn btn-secondary btn-sm"
+              style={{ marginTop: 8 }}
+              onClick={fetchMissions}
+            >
               Refresh
             </button>
           </div>
         ) : (
-          missions.map(m => (
-            <MissionCard
-              key={m.id}
-              mission={m}
-              onComplete={() => complete(m.id)}
-              completing={completing === m.id}
-            />
-          ))
+          <div className="col gap10">
+            {missions.map(m => (
+              <MissionCard
+                key={m.id}
+                mission={m}
+                onComplete={() => complete(m.id)}
+                completing={completing === m.id}
+              />
+            ))}
+          </div>
         )}
       </div>
     </div>
@@ -135,36 +157,54 @@ export default function Home() {
 function MissionCard({ mission, onComplete, completing }: {
   mission: Mission; onComplete: () => void; completing: boolean
 }) {
-  const priorityColor = mission.priority === 'high' ? 'var(--error)'
-    : mission.priority === 'medium' ? 'var(--warning)' : 'var(--muted)'
+  const dotColor = PRIORITY_COLOR[mission.priority] ?? 'var(--t3)'
 
   return (
     <div className={`mission-card${mission.completed ? ' done' : ''}`}>
       <button
-        className={`check-btn${mission.completed ? ' checked' : ''}`}
+        className={`check-ring${mission.completed ? ' checked' : ''}`}
         onClick={onComplete}
         disabled={mission.completed || completing}
         aria-label="Mark complete"
       >
-        {completing
-          ? <div style={{ width: 10, height: 10, border: '2px solid var(--muted)', borderTopColor: 'transparent', borderRadius: '50%', animation: 'spin 0.6s linear infinite' }} />
-          : mission.completed
-            ? <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
-            : null
-        }
+        {completing ? (
+          <div style={{
+            width: 9, height: 9,
+            border: '1.5px solid var(--t3)',
+            borderTopColor: 'transparent',
+            borderRadius: '50%',
+            animation: '_spin 0.6s linear infinite',
+          }} />
+        ) : mission.completed ? (
+          <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+        ) : null}
       </button>
-      <div className="col gap6" style={{ flex: 1, gap: 6 }}>
-        <p style={{ fontWeight: 600, fontSize: 15, textDecoration: mission.completed ? 'line-through' : 'none', opacity: mission.completed ? 0.6 : 1 }}>
+
+      <div className="col flex1" style={{ gap: 6 }}>
+        <p style={{
+          fontWeight: 500, fontSize: 14,
+          color: mission.completed ? 'var(--t3)' : 'var(--t1)',
+          textDecoration: mission.completed ? 'line-through' : 'none',
+          lineHeight: 1.4,
+        }}>
           {mission.task}
         </p>
-        {mission.why && <p className="text-sm text-muted">{mission.why}</p>}
+        {mission.why && (
+          <p className="t-sm" style={{ color: 'var(--t3)', lineHeight: 1.4 }}>
+            {mission.why}
+          </p>
+        )}
         <div className="row gap8" style={{ marginTop: 2 }}>
-          {mission.estimated_minutes && (
-            <span className="pill pill-muted">⏱ {mission.estimated_minutes}m</span>
-          )}
-          <span className="pill" style={{ background: 'transparent', border: `1px solid ${priorityColor}`, color: priorityColor }}>
+          <div className="mission-priority-dot" style={{ background: dotColor }} />
+          <p style={{ fontSize: 11, color: 'var(--t3)', fontWeight: 500, textTransform: 'capitalize' }}>
             {mission.priority}
-          </span>
+          </p>
+          {mission.estimated_minutes && (
+            <>
+              <p style={{ fontSize: 11, color: 'var(--t3)' }}>·</p>
+              <p style={{ fontSize: 11, color: 'var(--t3)' }}>{mission.estimated_minutes} min</p>
+            </>
+          )}
         </div>
       </div>
     </div>

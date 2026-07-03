@@ -10,10 +10,10 @@ interface RoadmapData { milestones: Milestone[]; goal_title: string }
 
 export default function Roadmap() {
   const { activeGoal } = useAuth()
-  const [data, setData] = useState<RoadmapData | null>(null)
+  const [data, setData]     = useState<RoadmapData | null>(null)
   const [loading, setLoading] = useState(true)
 
-  const fetch = useCallback(async () => {
+  const load = useCallback(async () => {
     if (!activeGoal) { setLoading(false); return }
     try {
       const res = await roadmapAPI.get(activeGoal.id)
@@ -22,59 +22,97 @@ export default function Roadmap() {
     finally { setLoading(false) }
   }, [activeGoal])
 
-  useEffect(() => { fetch() }, [fetch])
+  useEffect(() => { load() }, [load])
 
   if (!activeGoal) return (
-    <div className="page page-enter">
+    <div className="page animate-in">
       <div className="page-inner">
         <div className="empty-state">
-          <span className="empty-emoji">🗺️</span>
-          <p style={{ fontWeight: 700, fontSize: 18 }}>No active goal</p>
-          <p className="text-sm text-muted">Create a goal first to see your roadmap.</p>
+          <div className="empty-icon">
+            <svg viewBox="0 0 24 24"><path d="M3 3h7v7H3z"/><path d="M14 3h7v7h-7z"/><path d="M14 14h7v7h-7z"/><path d="M3 14h7v7H3z"/></svg>
+          </div>
+          <p style={{ fontWeight: 600, fontSize: 16 }}>No active goal</p>
+          <p className="t-sm t-muted">Create a goal to see your roadmap here.</p>
         </div>
       </div>
     </div>
   )
 
   return (
-    <div className="page page-enter">
+    <div className="page animate-in">
       <div className="page-inner">
-        <div className="col gap4">
-          <p className="text-xs text-accent upper">Your Roadmap</p>
-          <p style={{ fontWeight: 700, fontSize: 22 }}>{data?.goal_title ?? activeGoal.title}</p>
+        {/* Header */}
+        <div className="col gap4" style={{ paddingTop: 6 }}>
+          <p className="t-overline">Roadmap</p>
+          <h1 style={{ fontSize: 20, fontWeight: 700, letterSpacing: '-0.3px', lineHeight: 1.25 }}>
+            {data?.goal_title ?? activeGoal.title}
+          </h1>
         </div>
 
         {loading ? (
           <div className="loading-center"><div className="spinner-lg" /></div>
         ) : !data || data.milestones.length === 0 ? (
           <div className="empty-state">
-            <span className="empty-emoji">🗺️</span>
-            <p style={{ fontWeight: 700, fontSize: 18 }}>Roadmap not generated yet</p>
-            <p className="text-sm text-muted">Complete the assessment to generate your personalised roadmap.</p>
+            <div className="empty-icon">
+              <svg viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+            </div>
+            <p style={{ fontWeight: 600, fontSize: 16 }}>Roadmap not ready</p>
+            <p className="t-sm t-muted" style={{ lineHeight: 1.5 }}>
+              Complete the assessment to generate your personalised roadmap.
+            </p>
           </div>
         ) : (
-          <div className="timeline" style={{ marginTop: 8 }}>
+          <div className="timeline" style={{ paddingLeft: 28, marginTop: 8 }}>
             {data.milestones.map((m, i) => {
-              const isDone = m.completed || m.status === 'completed'
+              const isDone   = m.completed || m.status === 'completed'
               const isActive = !isDone && i === data.milestones.findIndex(x => !x.completed && x.status !== 'completed')
+
               return (
-                <div className="timeline-item" key={m.id}>
-                  <div className={`timeline-dot${isDone ? ' done' : isActive ? ' active' : ''}`}>
+                <div className="tl-item" key={m.id}>
+                  <div className={`tl-dot tl-dot-${isDone ? 'done' : isActive ? 'active' : 'pending'}`}>
                     {isDone && (
                       <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
                     )}
                   </div>
-                  <div className="card card-sm col gap6" style={{
-                    borderColor: isActive ? 'var(--accent)' : isDone ? 'var(--border)' : 'var(--border)',
-                    opacity: isDone ? 0.6 : 1,
-                  }}>
-                    <div className="row between">
-                      <span className="pill pill-muted">Week {m.week_number}</span>
-                      {isDone && <span className="pill pill-success">✓ Done</span>}
-                      {isActive && <span className="pill pill-accent">Active</span>}
+
+                  <div
+                    style={{
+                      flex: 1,
+                      background: isActive ? 'var(--surface)' : 'transparent',
+                      border: isActive ? '1px solid var(--line-strong)' : '1px solid transparent',
+                      borderRadius: 'var(--r2)',
+                      padding: '14px 16px',
+                      opacity: isDone && !isActive ? 0.5 : 1,
+                      boxShadow: isActive ? 'inset 0 1px 0 rgba(255,255,255,0.04)' : 'none',
+                      transition: 'opacity 0.2s',
+                    }}
+                  >
+                    <div className="row between" style={{ marginBottom: 6 }}>
+                      <span style={{
+                        fontSize: 10, fontWeight: 700, letterSpacing: 0.8, textTransform: 'uppercase',
+                        color: isActive ? 'var(--accent)' : 'var(--t3)',
+                      }}>
+                        Week {m.week_number}
+                      </span>
+                      {isDone && (
+                        <span style={{ fontSize: 10, fontWeight: 600, color: 'var(--success)', textTransform: 'uppercase', letterSpacing: 0.6 }}>
+                          Done
+                        </span>
+                      )}
+                      {isActive && (
+                        <span style={{ fontSize: 10, fontWeight: 600, color: 'var(--accent)', textTransform: 'uppercase', letterSpacing: 0.6 }}>
+                          Active
+                        </span>
+                      )}
                     </div>
-                    <p style={{ fontWeight: 600, fontSize: 15 }}>{m.title}</p>
-                    {m.description && <p className="text-sm text-muted">{m.description}</p>}
+                    <p style={{ fontWeight: 600, fontSize: 14, color: 'var(--t1)', lineHeight: 1.3 }}>
+                      {m.title}
+                    </p>
+                    {m.description && (
+                      <p style={{ fontSize: 12, color: 'var(--t3)', marginTop: 5, lineHeight: 1.5 }}>
+                        {m.description}
+                      </p>
+                    )}
                   </div>
                 </div>
               )

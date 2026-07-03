@@ -6,23 +6,22 @@ interface Message { role: 'user' | 'ai'; text: string }
 
 export default function Decision() {
   const { activeGoal } = useAuth()
-  const [messages, setMessages] = useState<Message[]>([])
-  const [input, setInput] = useState('')
-  const [sending, setSending] = useState(false)
+  const [messages, setMessages]         = useState<Message[]>([])
+  const [input, setInput]               = useState('')
+  const [sending, setSending]           = useState(false)
   const [loadingHistory, setLoadingHistory] = useState(true)
   const bottomRef = useRef<HTMLDivElement>(null)
 
-  // Load history
   useEffect(() => {
     ;(async () => {
       try {
         const res = await decisionAPI.history()
         const hist: Message[] = (res.data ?? []).flatMap((d: { question: string; answer: string }) => [
           { role: 'user', text: d.question },
-          { role: 'ai', text: d.answer },
+          { role: 'ai',   text: d.answer },
         ])
         setMessages(hist)
-      } catch { /* empty history is fine */ }
+      } catch { /* empty */ }
       finally { setLoadingHistory(false) }
     })()
   }, [])
@@ -42,17 +41,30 @@ export default function Decision() {
       const res = await decisionAPI.ask(activeGoal.id, q)
       setMessages(prev => [...prev, { role: 'ai', text: res.data.answer }])
     } catch {
-      setMessages(prev => [...prev, { role: 'ai', text: "Sorry, I couldn't process that. Try again." }])
+      setMessages(prev => [...prev, { role: 'ai', text: "I couldn't process that request. Please try again." }])
     } finally { setSending(false) }
   }
 
   return (
-    <div className="page-enter" style={{ display: 'flex', flexDirection: 'column', flex: 1, overflow: 'hidden', height: '100%' }}>
+    <div
+      className="animate-in"
+      style={{ display: 'flex', flexDirection: 'column', flex: 1, overflow: 'hidden', height: '100%' }}
+    >
       {/* Header */}
-      <div style={{ padding: '20px 20px 12px', borderBottom: '1px solid var(--border)', flexShrink: 0 }}>
-        <p className="text-xs text-accent upper">AI Decision Coach</p>
-        <p style={{ fontWeight: 700, fontSize: 18, marginTop: 2 }}>Ask Anything</p>
-        <p className="text-sm text-muted" style={{ marginTop: 2 }}>About your goal, strategy, next steps…</p>
+      <div style={{
+        padding: 'calc(var(--safe-top) + 20px) 22px 14px',
+        borderBottom: '1px solid var(--line)',
+        flexShrink: 0,
+      }}>
+        <p className="t-overline">AI Coach</p>
+        <h1 style={{ fontSize: 20, fontWeight: 700, letterSpacing: '-0.3px', marginTop: 4 }}>Ask anything</h1>
+        {activeGoal && (
+          <p className="t-sm" style={{ marginTop: 4, color: 'var(--t3)', lineHeight: 1.4 }}>
+            Focused on: {activeGoal.title.length > 48
+              ? activeGoal.title.slice(0, 48) + '…'
+              : activeGoal.title}
+          </p>
+        )}
       </div>
 
       {/* Chat area */}
@@ -61,9 +73,13 @@ export default function Decision() {
           <div className="loading-center"><div className="spinner-lg" /></div>
         ) : messages.length === 0 ? (
           <div className="empty-state" style={{ paddingTop: 32 }}>
-            <span className="empty-emoji">🤖</span>
-            <p style={{ fontWeight: 700, fontSize: 18 }}>Ask your AI coach</p>
-            <p className="text-sm text-muted">Type a question below to get personalised advice about your goal.</p>
+            <div className="empty-icon">
+              <svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+            </div>
+            <p style={{ fontWeight: 600, fontSize: 16 }}>Start a conversation</p>
+            <p className="t-sm t-muted" style={{ lineHeight: 1.5 }}>
+              Ask your AI coach anything about your goal — strategy, next steps, obstacles, priorities.
+            </p>
           </div>
         ) : (
           messages.map((m, i) => (
@@ -85,22 +101,23 @@ export default function Decision() {
 
       {/* Input */}
       {!activeGoal ? (
-        <div style={{ padding: 16, textAlign: 'center', borderTop: '1px solid var(--border)', background: 'var(--card)' }}>
-          <p className="text-sm text-muted">Create a goal first to use the AI coach.</p>
+        <div style={{ padding: '14px 20px', borderTop: '1px solid var(--line)', background: 'var(--bg)', textAlign: 'center' }}>
+          <p className="t-sm t-muted">Create a goal first to use the AI coach.</p>
         </div>
       ) : (
-        <form className="chat-input-row" onSubmit={send}>
+        <form className="chat-input-bar" onSubmit={send}>
           <input
             className="input"
-            style={{ height: 44, flex: 1 }}
+            style={{ height: 42, flex: 1, fontSize: 14 }}
             placeholder="Ask your coach…"
             value={input}
             onChange={e => setInput(e.target.value)}
             disabled={sending}
           />
           <button className="send-btn" type="submit" disabled={sending || !input.trim()} aria-label="Send">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-              <line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <line x1="22" y1="2" x2="11" y2="13"/>
+              <polygon points="22 2 15 22 11 13 2 9 22 2"/>
             </svg>
           </button>
         </form>

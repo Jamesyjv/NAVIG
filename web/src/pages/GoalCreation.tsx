@@ -19,38 +19,47 @@ export default function GoalCreation() {
     setLoading(true); setError('')
     try {
       const res = await goalsAPI.create(title.trim())
-      const goal = res.data
       if (category) await goalsAPI.updateActive({ category })
-      setActiveGoal(goal)
+      setActiveGoal(res.data)
       navigate('/assessment', { replace: true })
     } catch (err: unknown) {
       const e = err as { response?: { data?: { detail?: string } } }
-      setError(e.response?.data?.detail ?? 'Failed to create goal. Try again.')
+      setError(e?.response?.data?.detail ?? 'Something went wrong.')
       setLoading(false)
     }
   }
 
   return (
-    <div className="onboarding page-enter">
-      <div className="col gap4">
-        <p className="text-xs text-accent upper">Step 1 of 3</p>
-        <h2 className="text-title">What's your big goal?</h2>
-        <p className="text-sm text-muted">Be specific — the clearer it is, the better your AI roadmap.</p>
+    <div className="onboarding animate-in">
+      {/* Step indicator */}
+      <div className="row gap6">
+        <div className="step-dot active" />
+        <div className="step-dot" />
+        <div className="step-dot" />
       </div>
 
-      <form className="col gap16" onSubmit={handleSubmit} style={{ flex: 1 }}>
+      {/* Header */}
+      <div className="col gap8">
+        <p className="t-overline">Step 1 — Your goal</p>
+        <h2 className="t-title" style={{ lineHeight: 1.2 }}>What are you<br />working towards?</h2>
+        <p className="t-sm t-muted" style={{ lineHeight: 1.55, marginTop: 4 }}>
+          Be specific. The more context you give, the more accurate your roadmap will be.
+        </p>
+      </div>
+
+      <form className="col gap20" onSubmit={handleSubmit} style={{ flex: 1 }}>
         <textarea
           className="input"
-          placeholder="e.g. Become a full-stack developer in 6 months"
-          rows={3}
+          rows={4}
+          placeholder="e.g. Get a job as a backend engineer at a product company within 6 months"
           value={title}
           onChange={e => setTitle(e.target.value)}
           required
           style={{ paddingTop: 14, paddingBottom: 14 }}
         />
 
-        <div className="col gap8">
-          <p className="text-sm text-muted">Category (optional)</p>
+        <div className="col gap10">
+          <p className="input-label">Category</p>
           <div className="row wrap gap8">
             {CATEGORIES.map(c => (
               <button
@@ -65,11 +74,19 @@ export default function GoalCreation() {
           </div>
         </div>
 
-        {error && <p style={{ color: 'var(--error)', fontSize: 13 }}>{error}</p>}
+        {error && (
+          <p style={{ fontSize: 13, color: 'var(--danger)' }}>{error}</p>
+        )}
 
         <div style={{ flex: 1 }} />
+
         <button className="btn btn-primary" type="submit" disabled={loading || !title.trim()}>
-          {loading ? <span className="spinner" /> : 'Continue →'}
+          {loading ? <span className="spinner" /> : 'Continue'}
+          {!loading && (
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/>
+            </svg>
+          )}
         </button>
       </form>
     </div>
