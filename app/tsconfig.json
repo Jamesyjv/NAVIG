@@ -1,9 +1,0 @@
-{
-  "extends": "expo/tsconfig.base",
-  "compilerOptions": {
-    "strict": true,
-    "lib": ["DOM", "ESNext"]
-  },
-  "include": ["src/**/*", "*.ts", "*.tsx"],
-  "exclude": ["node_modules"]
-}
