@@ -13,7 +13,7 @@ interface AuthState {
   user: User | null
   activeGoal: Goal | null
   loading: boolean
-  login: (token: string) => Promise<void>
+  login: (token: string) => Promise<Goal | null>
   logout: () => void
   setActiveGoal: (g: Goal) => void
   updateActiveGoal: (patch: Partial<Goal>) => void
@@ -49,15 +49,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     })()
   }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
-  const login = async (newToken: string) => {
+  const login = async (newToken: string): Promise<Goal | null> => {
     localStorage.setItem('navig_token', newToken)
     setToken(newToken)
     const me = await authAPI.me()
     setUser(me.data)
+    let fetched: Goal | null = null
     try {
       const goal = await goalsAPI.getActive()
-      setActiveGoal(goal.data)
+      fetched = goal.data
+      setActiveGoal(fetched)
     } catch { setActiveGoal(null) }
+    return fetched
   }
 
   const logout = () => {
